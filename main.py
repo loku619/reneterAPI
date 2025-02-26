@@ -1,14 +1,20 @@
-from typing import Optional
-
-from fastapi import FastAPI
-
+from fastapi import FastAPI, APIRouter
+from configuration import collection
+from dataBase.schemas import all_task
+from dataBase.models import RenterData
 app = FastAPI()
+router = APIRouter()
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+@router.get("/get")
+async def get_all_task():
+    data = collection.find()
+    return all_task(list(data))
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Optional[str] = None):
-    return {"item_id": item_id, "q": q}
+@router.post("/add")
+async def add_renter_data(renter: RenterData):
+    renter_dict = renter.dict()
+    inserted = collection.insert_one(renter_dict)
+    return {"message": "Data added successfully!!!!", "id": str(inserted.inserted_id)}
+
+app.include_router(router)
